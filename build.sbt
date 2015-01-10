@@ -8,5 +8,6 @@ libraryDependencies ++= Seq(
     "org.scalacheck" %% "scalacheck" % "1.12.1" % "test"
 )
 
+import scoverage.ScoverageSbtPlugin.ScoverageKeys._
 coverageMinimum := 100
 coverageFailOnMinimum := true
