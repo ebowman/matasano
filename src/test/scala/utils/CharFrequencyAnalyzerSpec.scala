@@ -4,7 +4,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class CharFrequencyAnalyzerSpec extends FlatSpec with Matchers {
 
-  "The CharAnalyzer implementation" should "handle some known cases correctly in" in {
+  "The CharFrequencyAnalyzer" should "handle some known cases correctly in" in {
     val sentence = "Now! is the ... time for all good men to come to the aid of their country?"
     val charScores = CharFrequencyAnalyzer.analyze(sentence)
     for (letter <- ('a' to 'z') :+ ' ') {

@@ -7,13 +7,6 @@ import utils.Hex._
 
 class Base64Spec extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 
-  val digits: Seq[Char] = Seq('0' to '9', 'a' to 'f', 'A' to 'F').flatten
-  val digitGen = Gen.oneOf(digits)
-  val strGen = for {
-    digit1 <- digitGen
-    digit2 <- digitGen
-  } yield s"$digit1$digit2"
-
   it should "correctly encode 3 bytes into 4 6-bit values" in {
     import Base64._
     val arrayGen = for {

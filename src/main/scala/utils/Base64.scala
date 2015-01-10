@@ -34,7 +34,7 @@ object Base64 {
   val table: Array[Char] = (('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9') ++ Seq('+', '/')).toArray
 
   // convert a hex string to a base-64 encoded string
-  def apply(hex: String): String = {
+  def encode(hex: String): String = {
     hex.grouped(2).map(Hex.hex2).grouped(3).map(_.toArray).flatMap(toSixBits).map(table).mkString
   }
 }
