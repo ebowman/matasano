@@ -1,6 +1,6 @@
 package utils
 
-import org.scalacheck.Gen
+import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 import utils.Hex._
@@ -39,11 +39,28 @@ class Base64Spec extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
 
   it should "encode and decode correctly a variety of strings" in {
     for (text <- Seq("a", "aa", "aaa", "aaaa", "aaaaa", "aaaaaa")) {
-      Hex.hexDecode(Base64.decode(Base64.encode(Hex.hexEncode(text)))) shouldBe text
+      val hexEncoded = Hex.hexEncode(text)
+      val encoded = Base64.encode(hexEncoded)
+      val decoded = Base64.decode(encoded)
+      val hexDecoded = Hex.hexDecode(decoded)
+      hexDecoded shouldBe text
     }
   }
 
   it should "decode the smallest possible base64 string correctly" in {
     Base64.decode("a=") shouldBe "68"
+  }
+
+  it should "encode and decode arbitrary strings" in {
+    val genChar = Gen.choose(0, 255)
+    val genChars = Gen.listOf(genChar)
+    val genString = for {
+      list <- genChars
+    } yield list.map(_.toChar).mkString
+
+    forAll(genString) {
+      (s: String) =>
+        Hex.hexDecode(Base64.decode(Base64.encode(Hex.hexEncode(s)))) shouldBe s
+    }
   }
 }

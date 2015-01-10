@@ -11,6 +11,12 @@ case class Vector(terms: Seq[Double]) {
   }
 
   def +(other: Vector): Vector = Vector(terms.zip(other.terms).map(xy => xy._1 + xy._2))
+
+  def normal = {
+    def square(x: Double) = x * x
+    val magnitude = math.sqrt(terms.map(square).sum)
+    copy(terms = terms.map(_ / magnitude))
+  }
 }
 
 object Vector {

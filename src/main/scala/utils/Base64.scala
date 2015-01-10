@@ -52,15 +52,11 @@ object Base64 {
           // (00)111111 (00)11(0000)
           (x(0) << 2) + (x(1) >> 4),
           // (0000)1111 (00)1111(00)
-          ((x(1) & 0x0F) << 4) + ((x(2) & 0x3C) >> 2),
-          // (000000)11 (00)111111
-          (x(2) & 0x03) << 6)
+          ((x(1) & 0x0F) << 4) + ((x(2) & 0x3C) >> 2))
       case 2 =>
         Array(
           // (00)111111 (00)11(0000)
-          (x(0) << 2) + (x(1) >> 4),
-          // (0000)1111 (00)1111(00)
-          (x(1) & 0x0F) << 4)
+          (x(0) << 2) + (x(1) >> 4))
       case 1 =>
         Array(
           // (00)111111 (00)11(0000)
@@ -92,6 +88,6 @@ object Base64 {
   def decode(encoded: String): String = {
     encoded.takeWhile(_ != '=').grouped(4).flatMap { groupOf4 =>
       fromSixBits(groupOf4.map(_.toInt).map(reverseTable).toArray)
-    }.takeWhile(_ != 0).flatMap(Hex.byteToHex).toSeq.mkString
+    }.flatMap(Hex.byteToHex).toSeq.mkString
   }
 }

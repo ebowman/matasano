@@ -16,11 +16,11 @@ object Hex {
   /** Convert like 255 into ff */
   def byteToHex(x: Int): String = {
     require(x >= 0 && x < 256, s"oops, x was $x")
-    s"${intToHexChar((x & 0xF0) >> 4)}${intToHexChar(x & 0x0F)}"
+    s"${nybbleToHex((x & 0xF0) >> 4)}${nybbleToHex(x & 0x0F)}"
   }
 
   // convert 0..15 to 0..F
-  def intToHexChar(x: Int): Char = {
+  def nybbleToHex(x: Int): Char = {
     require(x >= 0 && x < 16)
     x match {
       case num if num >= 0 && num < 10 => (num + '0').toChar

@@ -5,7 +5,7 @@ import utils.Hex.hexDecode
 object SingleByteXorCypher {
 
   /** Given a plaintext that has been encrypted by xoring it with a single char then hex encoded, try to decrypt it. */
-  def decrypt(input: String): String = {
+  def crack(input: String): String = {
     // The assumption here (which seems to work in this case), is that if we have
     // a frequency vector for "english", then the best guess has the highest value when we take the dot product
     // between "english" and the analyzed frequency for an attempted decryption
@@ -27,7 +27,7 @@ object SingleByteXorCypher {
 
     // for each line, find the best decryption for it
     val pairs = lines.map {line =>
-      (line, SingleByteXorCypher.decrypt(line))
+      (line, SingleByteXorCypher.crack(line))
     }
 
     // score each best decryption relative to english

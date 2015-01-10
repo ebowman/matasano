@@ -19,4 +19,8 @@ class VectorSpec extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
   it should "support vector addition" in {
     Vector.fromTerms(0, 1, 0) + Vector.fromTerms(1, 0, 0) shouldEqual Vector.fromTerms(1, 1, 0)
   }
+
+  it should "normalize correctly" in {
+    Vector.fromTerms(1, 1, 1).normal shouldEqual Vector.fromTerms(1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3))
+  }
 }

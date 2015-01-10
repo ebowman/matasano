@@ -11,6 +11,6 @@ class XorSpec extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks 
   "Xor" should "behave correctly" in {
     val hexDigitGenerator = Gen.oneOf(('0' to '9') ++ ('a' to 'f'))
     forAll(hexDigitGenerator) { a => xorHexDigit(a, '0') shouldEqual a }
-    forAll(hexDigitGenerator) { a => xorHexDigit(a, 'f') shouldEqual intToHexChar(15 - hexCharToInt(a)) }
+    forAll(hexDigitGenerator) { a => xorHexDigit(a, 'f') shouldEqual nybbleToHex(15 - hexCharToInt(a)) }
   }
 }
