@@ -2,7 +2,7 @@ package set1.challenge1
 
 object convertHexToBase64 {
 
-  def hexDigit(char: Character): Int = {
+  def hexCharToInt(char: Character): Int = {
     char match {
       case num if num >= '0' && num <= '9' => num - '0'
       case num if num >= 'a' && num <= 'f' => num - 'a' + 10
@@ -11,9 +11,17 @@ object convertHexToBase64 {
     }
   }
 
+  def intToHexChar(x: Int): Char = {
+    require(x >= 0 && x < 16)
+    x match {
+      case num if num >= 0 && num < 10 => (num + '0').toChar
+      case _ => (x + 'a' - 10).toChar
+    }
+  }
+
   def hex2(value: String): Int = {
     require(value.size == 2)
-    hexDigit(value(0)) * 16 + hexDigit(value(1))
+    hexCharToInt(value(0)) * 16 + hexCharToInt(value(1))
   }
 
   def toSixBits(x: Array[Int]): Array[Int] = {

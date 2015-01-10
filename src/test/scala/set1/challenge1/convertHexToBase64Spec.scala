@@ -24,12 +24,12 @@ class convertHexToBase64Spec extends FlatSpec with Matchers with GeneratorDriven
   it should "correctly encode single hex digits" in {
     forAll(digitGen) {
       (digit: Char) =>
-        hexDigit(digit) shouldEqual Character.digit(digit, 16)
+        hexCharToInt(digit) shouldEqual Character.digit(digit, 16)
     }
   }
 
   it should "fail encoding a non-hex char" in {
-    an[IllegalArgumentException] should be thrownBy hexDigit('g')
+    an[IllegalArgumentException] should be thrownBy hexCharToInt('g')
   }
 
   it should "correctly encode 2-char hex strings" in {
