@@ -2,6 +2,8 @@ package set1.challenge1
 
 object convertHexToBase64 {
 
+  val hexChars = ('0' to '9') ++ ('a' to 'f')
+
   def hexCharToInt(char: Character): Int = {
     char match {
       case num if num >= '0' && num <= '9' => num - '0'
