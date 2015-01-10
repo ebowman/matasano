@@ -1,12 +1,11 @@
-package set1.challenge1
+package utils
 
 import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
+import utils.Hex._
 
-class convertHexToBase64Spec extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
-
-  import set1.challenge1.convertHexToBase64._
+class HexSpec extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 
   val digits: Seq[Char] = Seq('0' to '9', 'a' to 'f', 'A' to 'F').flatten
   val digitGen = Gen.oneOf(digits)
@@ -18,7 +17,7 @@ class convertHexToBase64Spec extends FlatSpec with Matchers with GeneratorDriven
   "The convertToBase64 functionality" should "convert the known test case" in {
     val input = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
     val output = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
-    convertHexToBase64(input) shouldEqual output
+    utils.Base64(input) shouldEqual output
   }
 
   it should "correctly encode single hex digits" in {
@@ -42,16 +41,7 @@ class convertHexToBase64Spec extends FlatSpec with Matchers with GeneratorDriven
     an[IllegalArgumentException] should be thrownBy hex2("abc")
   }
 
-  it should "correctly encode 3 bytes into 4 6-bit values" in {
-    val arrayGen = for {
-      a <- Gen.choose(0, 255)
-      b <- Gen.choose(0, 255)
-      c <- Gen.choose(0, 255)
-    } yield Array(a, b, c)
-
-    forAll(arrayGen) {
-      (bytes) =>
-        fromSixBits(toSixBits(bytes)).toSeq shouldEqual bytes.toSeq
-    }
+  it should "decode a hex string" in {
+    utils.Hex.decodeHexString("41424344") shouldBe "ABCD"
   }
 }

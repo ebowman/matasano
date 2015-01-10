@@ -1,8 +1,8 @@
-package set1.challenge2
+package utils
 
-object fixedXor {
+object Xor {
 
-  import set1.challenge1.convertHexToBase64._
+  import utils.Hex._
 
   def xorHexDigit(a: Char, b: Char): Char = intToHexChar(hexCharToInt(a) ^ hexCharToInt(b))
 

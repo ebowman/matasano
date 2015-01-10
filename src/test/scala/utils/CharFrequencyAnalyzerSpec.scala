@@ -1,4 +1,4 @@
-package set1.challenge3
+package utils
 
 import org.scalatest.{FlatSpec, Matchers}
 
