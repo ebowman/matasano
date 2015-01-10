@@ -64,7 +64,7 @@ object singleByteXorCypher {
     // between "english" and the analyzed frequency for an attempted decryption
     val engFreqs = CharFrequencyAnalyzer.englishFreqVector
     val decoded = decodeHexString(input)
-    val results = for (x <- ('A' to 'Z') ++ ('a' to 'z')) yield {
+    val results = for (x <- 0 to 255) yield {
       val candidate = decoded.map(c => c ^ x).map(_.toChar).mkString
       val freqs = CharFrequencyAnalyzer.analyze(candidate)
       (candidate, freqs dot engFreqs)
