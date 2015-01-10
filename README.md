@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ebowman/matasano.svg?branch=master)](https://travis-ci.org/ebowman/matasano.svg?branch=master)
+
 My attempt at the Matasano Challenge
 See http://cryptopals.com/
 
