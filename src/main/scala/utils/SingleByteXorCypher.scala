@@ -1,6 +1,6 @@
 package utils
 
-import utils.Hex.decodeHexString
+import utils.Hex.hexDecode
 
 object SingleByteXorCypher {
 
@@ -10,7 +10,7 @@ object SingleByteXorCypher {
     // a frequency vector for "english", then the best guess has the highest value when we take the dot product
     // between "english" and the analyzed frequency for an attempted decryption
     val engFreqs = CharFrequencyAnalyzer.englishFreqVector
-    val decoded = decodeHexString(input)
+    val decoded = hexDecode(input)
     val results = for (x <- 0 to 255) yield {
       val candidate = decoded.map(c => c ^ x).map(_.toChar).mkString
       val freqs = CharFrequencyAnalyzer.analyze(candidate)

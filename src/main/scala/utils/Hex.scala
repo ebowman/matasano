@@ -13,9 +13,9 @@ object Hex {
     }
   }
 
-  // convert a byte value to a 2-char hex string
+  /** Convert like 255 into ff */
   def byteToHex(x: Int): String = {
-    require(x >= 0 && x < 256)
+    require(x >= 0 && x < 256, s"oops, x was $x")
     s"${intToHexChar((x & 0xF0) >> 4)}${intToHexChar(x & 0x0F)}"
   }
 
@@ -34,8 +34,12 @@ object Hex {
     hexCharToInt(value(0)) * 16 + hexCharToInt(value(1))
   }
 
+  def hexEncode(str: String): String = {
+    str.map(_.toInt).flatMap(byteToHex).mkString
+  }
+  
   /** Given a string like "414243" returns "ABC" */
-  def decodeHexString(hexStr: String): String = {
+  def hexDecode(hexStr: String): String = {
     hexStr.grouped(2).map(hex2).map(_.toChar).mkString
   }
 }

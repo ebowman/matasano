@@ -36,6 +36,14 @@ class HexSpec extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks 
   }
 
   it should "decode a hex string" in {
-    utils.Hex.decodeHexString("41424344") shouldBe "ABCD"
+    utils.Hex.hexDecode("41424344") shouldBe "ABCD"
+  }
+
+  it should "hex encode us-ascii strings" in {
+    utils.Hex.hexEncode("abcd") shouldBe "61626364"
+  }
+
+  it should "throw an exception if the byteToHex argument is out of range" in {
+    an[IllegalArgumentException] should be thrownBy Hex.byteToHex(256)
   }
 }
