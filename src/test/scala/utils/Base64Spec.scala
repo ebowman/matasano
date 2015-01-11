@@ -4,7 +4,7 @@ import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 import utils.Base64.Base64Ops
-import utils.Hex.HexOps
+import utils.HexOps._
 
 class Base64Spec extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 

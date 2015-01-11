@@ -4,6 +4,7 @@ import org.scalacheck.Gen
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 import utils.Hex._
+import utils.HexOps._
 
 class HexSpec extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 

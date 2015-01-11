@@ -3,7 +3,7 @@ package challenges
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 import utils.Base64.Base64Ops
-import utils.Hex.HexOps
+import utils.HexOps._
 import utils._
 
 class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
@@ -39,10 +39,14 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
   }
 
   "set 1 challenge 6" should "be solved" in {
-    //pending
-    val base64Encoded = io.Source.fromInputStream(getClass.getResourceAsStream("/6.txt")).getLines().mkString
-    val hexCrypto = base64Encoded.fromBase64
+    val hexCrypto = io.Source.fromInputStream(getClass.getResourceAsStream("/6.txt")).getLines().mkString.fromBase64
     val key = RepeatingKeyXor.crackRepeating(hexCrypto)
     key shouldBe "Terminator X: Bring the noise"
+  }
+
+  "set 1 challenge 7" should "be solved" in {
+    val key = "YELLOW SUBMARINE"
+    val hexCrypto = io.Source.fromInputStream(getClass.getResourceAsStream("/7.txt")).getLines().mkString.fromBase64
+    AES.decrypt(key.toHex, hexCrypto).fromHex should startWith("I'm back and I'm ringin' the bell")
   }
 }

@@ -1,6 +1,7 @@
 package utils
 
-import utils.Hex.{HexOps, byteToHex}
+import utils.Hex.byteToHex
+import utils.HexOps._
 import utils.Types.HexString
 
 import scala.collection.immutable.IndexedSeq

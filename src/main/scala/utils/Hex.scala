@@ -2,6 +2,25 @@ package utils
 
 import utils.Types.HexString
 
+object HexOps {
+
+  implicit class ToHexOps(val str: String) extends AnyVal {
+    def toHex: HexString = Hex.hexEncode(str)
+  }
+
+  implicit class FromHexOps(val str: HexString) extends AnyVal {
+    def fromHex: String = Hex.hexDecode(str)
+  }
+
+  implicit class ToHexString(val bytes: Array[Byte]) extends AnyVal {
+    def toHexString: HexString = {
+      import Hex._
+      bytes.flatMap(b => byteToHex(b.toInt)).mkString
+    }
+  }
+
+}
+
 object Hex {
 
   val hexChars = ('0' to '9') ++ ('a' to 'f')
@@ -46,9 +65,4 @@ object Hex {
     }
   }
 
-  implicit class HexOps(val str: String) extends AnyVal {
-    def toHex: HexString = hexEncode(str)
-
-    def fromHex: String = hexDecode(str)
-  }
 }
