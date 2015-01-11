@@ -19,6 +19,12 @@ object HexOps {
     }
   }
 
+  implicit class FromHexString(val bytes: HexString) extends AnyVal {
+    def toBytes: Array[Byte] = {
+      bytes.fromHex.getBytes("ISO-8859-1")
+    }
+  }
+
 }
 
 object Hex {

@@ -49,4 +49,9 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
     val hexCrypto = io.Source.fromInputStream(getClass.getResourceAsStream("/7.txt")).getLines().mkString.fromBase64
     AES.decrypt(key.toHex, hexCrypto).fromHex should startWith("I'm back and I'm ringin' the bell")
   }
+
+  "set 1 challenge 8" should "be solved" in {
+    val cryptoLines = io.Source.fromInputStream(getClass.getResourceAsStream("/8.txt")).getLines()
+    cryptoLines.exists(AES.hasDuplicateBlocks(16))
+  }
 }
