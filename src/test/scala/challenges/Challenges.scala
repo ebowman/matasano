@@ -32,17 +32,17 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
 
   "set 1 challenge 5" should "be solved in" in {
     val clearText = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal"
-    val crypto = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"
-    RepeatingKeyXor.encrypt(clearText, "ICE") shouldBe crypto
-    RepeatingKeyXor.encrypt(Hex.hexDecode(crypto), "ICE") shouldBe Hex.hexEncode(clearText)
-    RepeatingKeyXor.crackRepeating(crypto) shouldBe "ICE"
+    val hexCrypto = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"
+    RepeatingKeyXor.encrypt(clearText, "ICE") shouldBe hexCrypto
+    RepeatingKeyXor.encrypt(Hex.hexDecode(hexCrypto), "ICE") shouldBe Hex.hexEncode(clearText)
+    RepeatingKeyXor.crackRepeating(hexCrypto, 5) shouldBe "ICE"
   }
 
   "set 1 challenge 6" should "be solved" in {
-    pending
-//    val base64Encoded = io.Source.fromInputStream(getClass.getResourceAsStream("/6.txt")).getLines().mkString
-//    val hexCrypto = Base64.decode(base64Encoded)
-//    val key = RepeatingKeyXor.crackRepeating(hexCrypto)
-//    println(Hex.hexDecode(RepeatingKeyXor.encrypt(Hex.hexDecode(hexCrypto), key)))
+    //pending
+    val base64Encoded = io.Source.fromInputStream(getClass.getResourceAsStream("/6.txt")).getLines().mkString
+    val hexCrypto = Base64.decode(base64Encoded)
+    val key = RepeatingKeyXor.crackRepeating(hexCrypto)
+    key shouldBe "Terminator X: Bring the noise"
   }
 }
