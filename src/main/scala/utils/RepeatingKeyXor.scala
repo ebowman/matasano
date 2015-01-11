@@ -8,14 +8,6 @@ import scala.collection.mutable.ListBuffer
 
 object RepeatingKeyXor {
 
-  /** returns a hex string encrypted (or decrypted) version from the given key. */
-  def encrypt(clearText: String, key: String): HexString = {
-    val fullKey = key * (1 + clearText.size / key.size)
-    clearText.zip(fullKey).flatMap {
-      case (c, k) => byteToHex(c ^ k)
-    }.mkString
-  }
-
   /** given a hex-encoded crypto string, returns the key that will decrypt it */
   def crackRepeating(hexCrypto: HexString, maxKeySize: Int = 40): String = {
     val cryptoText = Hex.hexDecode(hexCrypto)
@@ -49,5 +41,13 @@ object RepeatingKeyXor {
       val analyzed = CharFrequencyAnalyzer.analyze(decrypted)
       key -> analyzed.normal.dot(CharFrequencyAnalyzer.englishFreqVector.normal)
     }.sortBy(_._2).reverse.head._1
+  }
+
+  /** returns a hex string encrypted (or decrypted) version from the given key. */
+  def encrypt(clearText: String, key: String): HexString = {
+    val fullKey = key * (1 + clearText.size / key.size)
+    clearText.zip(fullKey).flatMap {
+      case (c, k) => byteToHex(c ^ k)
+    }.mkString
   }
 }

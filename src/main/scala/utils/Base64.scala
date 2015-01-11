@@ -2,10 +2,20 @@ package utils
 
 object Base64 {
 
-  implicit class Base64Ops(val str: String) extends AnyVal {
-    def toBase64: String = encode(str)
+  // convert a base64 char value to its 0..63 value
+  lazy val reverseTable = {
+    val array = new Array[Int](table.max + 1)
+    table.zipWithIndex.foreach {
+      case (c, i) => array(c) = i
+    }
+    array
+  }
+  // convert 0..63 to its base64 char value
+  val table: Array[Char] = (('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9') ++ Seq('+', '/')).toArray
 
-    def fromBase64: String = decode(str)
+  /** convert a hex string to a base-64 encoded string */
+  def encode(hex: String): String = {
+    hex.grouped(2).map(Hex.hex2).grouped(3).map(_.toArray).flatMap(toSixBits).map(table).mkString
   }
 
   // 3-byte array of 8-bit values to 4-byte array of 6-bit values
@@ -40,6 +50,16 @@ object Base64 {
     }
   }
 
+  /**
+   * decodes a base-64 encoded string into a hex string
+   * so every 4 chars converts into 3 bytes or 6 hex chars
+   */
+  def decode(encoded: String): String = {
+    encoded.takeWhile(_ != '=').grouped(4).flatMap { groupOf4 =>
+      fromSixBits(groupOf4.map(_.toInt).map(reverseTable).toArray)
+    }.flatMap(Hex.byteToHex).toSeq.mkString
+  }
+
   // 4-byte array of 6-bit values to 3-byte array of 8-bit values
   def fromSixBits(x: Array[Int]): Array[Int] = {
     require(x.size <= 4)
@@ -71,30 +91,9 @@ object Base64 {
     }
   }
 
-  // convert 0..63 to its base64 char value
-  val table: Array[Char] = (('A' to 'Z') ++ ('a' to 'z') ++ ('0' to '9') ++ Seq('+', '/')).toArray
+  implicit class Base64Ops(val str: String) extends AnyVal {
+    def toBase64: String = encode(str)
 
-  // convert a base64 char value to its 0..63 value
-  lazy val reverseTable = {
-    val array = new Array[Int](table.max + 1)
-    table.zipWithIndex.foreach {
-      case (c, i) => array(c) = i
-    }
-    array
-  }
-
-  /** convert a hex string to a base-64 encoded string */
-  def encode(hex: String): String = {
-    hex.grouped(2).map(Hex.hex2).grouped(3).map(_.toArray).flatMap(toSixBits).map(table).mkString
-  }
-
-  /**
-   * decodes a base-64 encoded string into a hex string
-   * so every 4 chars converts into 3 bytes or 6 hex chars
-   */
-  def decode(encoded: String): String = {
-    encoded.takeWhile(_ != '=').grouped(4).flatMap { groupOf4 =>
-      fromSixBits(groupOf4.map(_.toInt).map(reverseTable).toArray)
-    }.flatMap(Hex.byteToHex).toSeq.mkString
+    def fromBase64: String = decode(str)
   }
 }
