@@ -17,12 +17,15 @@ object AES {
   }
 
   def hasDuplicateBlocks(blockSize: Int)(data: HexString): Boolean = {
-    val checksums = data.toBytes.grouped(blockSize).map {
+    data.toBytes.grouped(blockSize).map {
       group =>
         val crc = new CRC32
         crc.update(group)
         crc.getValue
-    }.toSeq
-    checksums.distinct.size != checksums.size
+    }.foldLeft((false, Set[Long]())) {
+      case (a@(true, _), _) => a
+      case ((false, set), crc) if set.contains(crc) => (true, set)
+      case ((false, set), crc) => (false, set + crc)
+    }._1
   }
 }
