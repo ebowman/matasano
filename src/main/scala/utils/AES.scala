@@ -8,12 +8,24 @@ import utils.HexOps._
 import utils.Types.HexString
 
 object AES {
-  def decrypt(key: HexString, cryptoHex: HexString): HexString = {
+
+  def ecb(key: HexString, text: HexString, mode: Int): HexString = {
+    require(key.size == 32)
     val cipher = Cipher.getInstance("AES/ECB/NoPadding")
     val keySpec = new SecretKeySpec(key.fromHex.getBytes("ISO-8859-1"), "AES")
-    cipher.init(Cipher.DECRYPT_MODE, keySpec)
-    val bytes = cipher.doFinal(cryptoHex.fromHex.getBytes("ISO-8859-1"))
+    cipher.init(mode, keySpec)
+    val bytes = cipher.doFinal(text.fromHex.getBytes("ISO-8859-1"))
     bytes.toHexString
+  }
+
+  def decryptECB(key: HexString, cryptoHex: HexString): HexString = ecb(key, cryptoHex, Cipher.DECRYPT_MODE)
+
+  def encryptECB(key: HexString, plainHex: HexString): HexString = ecb(key, plainHex, Cipher.ENCRYPT_MODE)
+
+  def decryptCBC(key: HexString, cryptoHex: HexString, iv: HexString): HexString = {
+    require(key.size == 32)
+    val blocks = iv #:: cryptoHex.grouped(key.size).toStream
+    (blocks.zip(blocks.tail) map { case (prev, cur) => Xor.xor(prev, decryptECB(key, cur)) }).mkString
   }
 
   def hasDuplicateBlocks(blockSize: Int)(data: HexString): Boolean = {

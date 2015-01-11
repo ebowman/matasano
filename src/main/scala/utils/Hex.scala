@@ -15,7 +15,7 @@ object HexOps {
   implicit class ToHexString(val bytes: Array[Byte]) extends AnyVal {
     def toHexString: HexString = {
       import Hex._
-      bytes.flatMap(b => byteToHex(b.toInt)).mkString
+      bytes.flatMap(b => byteToHex(b.toInt & 0xFF)).mkString
     }
   }
 

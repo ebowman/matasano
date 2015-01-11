@@ -47,4 +47,8 @@ class HexSpec extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks 
   it should "throw an exception if the byteToHex argument is out of range" in {
     an[IllegalArgumentException] should be thrownBy Hex.byteToHex(256)
   }
+
+  it should "hex decode an array of bytes into unsigned" in {
+    Array[Byte](-2, -1, 0, 1).toHexString shouldBe "feff0001"
+  }
 }
