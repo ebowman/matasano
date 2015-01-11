@@ -1,5 +1,7 @@
 package challenges
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 import utils.Base64.Base64Ops
@@ -59,5 +61,25 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
     val hexCrypto = io.Source.fromInputStream(getClass.getResourceAsStream("/10.txt")).getLines().mkString.fromBase64
     AES.decryptCBC("YELLOW SUBMARINE".toHex, hexCrypto, "00" * 16) should
       endWith("Play that funky music \n\u0004\u0004\u0004\u0004".toHex)
+  }
+
+  "set 2 challenge 11" should "be solved" in {
+    // take a known plain text (which surely has some duplication)
+    // encrypt it with a random key, a random iv, a random algorithm, and some garbage 100 times
+    // try to detect whether it is ECB or CBC by detecting duplicate blocks
+    // Since it's 50/50 whether we use ECB or CBC, it should be approximately 50/50 we detect one vs the other.
+    val hexCrypto = io.Source.fromInputStream(getClass.getResourceAsStream("/10.txt")).getLines().mkString.fromBase64
+    val hexText = AES.decryptCBC("YELLOW SUBMARINE".toHex, hexCrypto, "00" * 16)
+    val ecbCounts = new AtomicInteger(0)
+    val cbcCounts = new AtomicInteger(0)
+    val count = 500
+    (1 to count).par.foreach { _ =>
+      val encrypted = AES.encryptionOracle(hexText)
+      if (AES.hasDuplicateBlocks(16)(encrypted)) ecbCounts.incrementAndGet()
+      else cbcCounts.incrementAndGet()
+    }
+    // this will occasionally fail... :-/
+    ecbCounts.get() / count.toDouble shouldBe 0.5 +- 0.1
+    cbcCounts.get() / count.toDouble shouldBe 0.5 +- 0.1
   }
 }
