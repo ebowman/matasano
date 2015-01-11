@@ -10,6 +10,7 @@ object Hamming {
       case (d, bit) => if ((xor & (1 << bit)) != 0) d + 1 else d
     }
   }
+
   def distance(a: String, b: String): Int = {
     a.zip(b).map(ab => Hamming.distanceBytes(ab._1, ab._2)).sum
   }

@@ -13,7 +13,7 @@ class VectorSpec extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
   }
 
   it should "allow constructing basis vectors" in {
-    Vector.basis(3, 10, 5d) shouldEqual Vector(Seq(0,0,0,5d,0,0,0,0,0,0))
+    Vector.basis(3, 10, 5d) shouldEqual Vector(Seq(0, 0, 0, 5d, 0, 0, 0, 0, 0, 0))
   }
 
   it should "support vector addition" in {
@@ -21,6 +21,6 @@ class VectorSpec extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
   }
 
   it should "normalize correctly" in {
-    Vector.fromTerms(1, 1, 1).normal shouldEqual Vector.fromTerms(1/math.sqrt(3), 1/math.sqrt(3), 1/math.sqrt(3))
+    Vector.fromTerms(1, 1, 1).normal shouldEqual Vector.fromTerms(1 / math.sqrt(3), 1 / math.sqrt(3), 1 / math.sqrt(3))
   }
 }

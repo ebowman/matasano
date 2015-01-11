@@ -1,6 +1,6 @@
 package utils
 
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{FlatSpec, Matchers}
 
 class HammingSpec extends FlatSpec with Matchers {
 

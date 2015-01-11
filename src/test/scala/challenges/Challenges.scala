@@ -2,9 +2,9 @@ package challenges
 
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
+import utils.Base64.Base64Ops
+import utils.Hex.HexOps
 import utils._
-
-import scala.collection.mutable.ListBuffer
 
 class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 
@@ -34,14 +34,14 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
     val clearText = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal"
     val hexCrypto = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"
     RepeatingKeyXor.encrypt(clearText, "ICE") shouldBe hexCrypto
-    RepeatingKeyXor.encrypt(Hex.hexDecode(hexCrypto), "ICE") shouldBe Hex.hexEncode(clearText)
+    RepeatingKeyXor.encrypt(hexCrypto.fromHex, "ICE").fromHex shouldBe clearText
     RepeatingKeyXor.crackRepeating(hexCrypto, 5) shouldBe "ICE"
   }
 
   "set 1 challenge 6" should "be solved" in {
     //pending
     val base64Encoded = io.Source.fromInputStream(getClass.getResourceAsStream("/6.txt")).getLines().mkString
-    val hexCrypto = Base64.decode(base64Encoded)
+    val hexCrypto = base64Encoded.fromBase64
     val key = RepeatingKeyXor.crackRepeating(hexCrypto)
     key shouldBe "Terminator X: Bring the noise"
   }

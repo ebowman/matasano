@@ -1,6 +1,13 @@
 package utils
 
 object Base64 {
+
+  implicit class Base64Ops(val str: String) extends AnyVal {
+    def toBase64: String = encode(str)
+
+    def fromBase64: String = decode(str)
+  }
+
   // 3-byte array of 8-bit values to 4-byte array of 6-bit values
   def toSixBits(x: Array[Int]): Array[Int] = {
     require(x.size <= 3, s"oops: ${x.toSeq}")

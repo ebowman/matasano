@@ -1,6 +1,15 @@
 package utils
 
+import utils.Types.HexString
+
 object Hex {
+
+  implicit class HexOps(val str: String) extends AnyVal {
+    def toHex: HexString = hexEncode(str)
+
+    def fromHex: String = hexDecode(str)
+  }
+
   val hexChars = ('0' to '9') ++ ('a' to 'f')
 
   // '0' -> 'F' to 0..15
@@ -37,7 +46,7 @@ object Hex {
   def hexEncode(str: String): String = {
     str.map(_.toInt).flatMap(byteToHex).mkString
   }
-  
+
   /** Given a string like "414243" returns "ABC" */
   def hexDecode(hexStr: String): String = {
     hexStr.grouped(2).map(hex2).map(_.toChar).mkString
