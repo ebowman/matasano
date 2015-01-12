@@ -25,6 +25,10 @@ object HexOps {
     }
   }
 
+  implicit class ToHexChar(val char: Char) extends AnyVal {
+    def toHex: HexString = Hex.byteToHex(char.toInt)
+  }
+
 }
 
 object Hex {

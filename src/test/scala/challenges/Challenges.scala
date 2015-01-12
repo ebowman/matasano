@@ -1,12 +1,16 @@
 package challenges
 
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
 import utils.Base64.Base64Ops
 import utils.HexOps._
+import utils.Types.HexString
 import utils._
+
+import scala.collection.mutable
 
 class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 
@@ -81,5 +85,75 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
     // this will occasionally fail... :-/
     ecbCounts.get() / count.toDouble shouldBe 0.5 +- 0.1
     cbcCounts.get() / count.toDouble shouldBe 0.5 +- 0.1
+  }
+
+  "set 2 challenge 12" should "be solved" in {
+    def randomKey(size: Int = 16) = {
+      val key = new Array[Byte](size)
+      util.Random.nextBytes(key)
+      key.toHexString
+    }
+    val key = randomKey()
+    import utils.Base64.Base64Ops
+    val unknown: HexString = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK".fromBase64
+    def encrypt(known: HexString): HexString = AES.encryptECB(key, Padding.pks7Pad(known + unknown, 16))
+
+    // 1.
+    // compute a stream of the encryption block, each time encrypting one more
+    // character.  zip that stream with its tail, so we can compute the difference
+    // between each encryption and the one before it. As soon as the difference is
+    // greater than 0, we know the block size. Note we divide by two because we are
+    // working with HexStrings, which are 2 chars per byte.
+    lazy val stream = Stream.from(0).map(i => encrypt(("A" * i).toHex).size)
+    val blockSize = stream.zip(stream.tail).map(ab => (ab._2 - ab._1) / 2).dropWhile(_ == 0).head
+    blockSize shouldBe 16
+
+    // 2. As we introduce duplication into the encryption we should see duplicate blocks because, ECB
+    AES.hasDuplicateBlocks(blockSize)(encrypt("A".toHex * 50)) shouldBe true
+    // just to sanity check ECB vs CBC
+    AES.hasDuplicateBlocks(blockSize)(AES.encryptECB(key, "A".toHex * 32)) shouldBe true
+    AES.hasDuplicateBlocks(blockSize)(AES.encryptCBC(key, "A".toHex * 32, key)) shouldBe false
+
+
+    // 3.
+    val blockMinus1Encrypted = encrypt(("A" * (blockSize - 1)).toHex)
+    val firstCryptoByte = blockMinus1Encrypted.take(blockSize * 2).reverse.take(2).reverse
+
+    // build an encryption dictionary for the first character
+    val dictionary = (for (c <- 0 to 255) yield {
+     c.toChar.toHex -> encrypt(("A" * (blockSize - 1) + c.toChar).toHex).take(2 * blockSize).reverse.take(2).reverse
+    }).toMap
+
+    // 4.
+
+    // how many blocks does the secret cover?
+    val numBlocks = encrypt("").size / (2 * blockSize)
+
+    // gradually decrypt the secret into here (as a hex string)
+    val secret = new StringBuilder
+
+    // loop over each block, and each position within each block
+    for { curBlock <- 0 until numBlocks; curIndex <- 0 until blockSize } {
+      // for this index into the current block, generate these number of "A"s
+      val As = ("A" * (blockSize - (curIndex + 1))).toHex
+
+      // from a hex string, extract the current block under consideration
+      def thisBlock(str: String) = str.drop(2 * curBlock * blockSize).take(2 * blockSize)
+
+      // figure out, for every character, what it encrypts to at this position within this block
+      import scala.collection.JavaConverters._
+      val blocks = new ConcurrentHashMap[Int, String]().asScala
+      for (char <- (0 until 256).par) {
+        blocks(char) = thisBlock(encrypt(As + secret.toString + char.toChar.toHex))
+      }
+      println(blocks)
+
+      // encrypt with the right number of padded As, and then find the character that had to be
+      // there in order to encrypt this block to that value. Then append that to the secret
+      val toMatch = thisBlock(encrypt(As))
+      val byte = blocks.find(_._2 == toMatch).map(_._1)
+      byte.foreach(b => secret.append(b.toChar.toHex))
+    }
+    secret.toString().fromHex should startWith("Rollin' in my 5.0")
   }
 }
