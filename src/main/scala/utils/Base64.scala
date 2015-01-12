@@ -1,5 +1,7 @@
 package utils
 
+import utils.Types.HexString
+
 object Base64 {
 
   // convert a base64 char value to its 0..63 value
@@ -94,6 +96,6 @@ object Base64 {
   implicit class Base64Ops(val str: String) extends AnyVal {
     def toBase64: String = encode(str)
 
-    def fromBase64: String = decode(str)
+    def fromBase64: HexString = decode(str)
   }
 }

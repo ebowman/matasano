@@ -10,6 +10,7 @@ object Hamming {
     require(a >= 0 && a < 256)
     require(b >= 0 && b < 256)
     val xor = a ^ b
+    // or you could use Integer.bitCount(a ^ b) ;)
     (0 until 8).fold(0) {
       case (d, bit) => if ((xor & (1 << bit)) != 0) d + 1 else d
     }
