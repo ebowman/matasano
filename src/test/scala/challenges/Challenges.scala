@@ -10,8 +10,6 @@ import utils.HexOps._
 import utils.Types.HexString
 import utils._
 
-import scala.collection.mutable
-
 class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChecks {
 
   "set 1 challenge 1" should "be solved" in {
@@ -88,15 +86,19 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
   }
 
   "set 2 challenge 12" should "be solved" in {
-    def randomKey(size: Int = 16) = {
-      val key = new Array[Byte](size)
-      util.Random.nextBytes(key)
-      key.toHexString
+    val key = {
+      def randomKey(size: Int = 16) = {
+        val key = new Array[Byte](size)
+        util.Random.nextBytes(key)
+        key.toHexString
+      }
+      randomKey()
     }
-    val key = randomKey()
-    import utils.Base64.Base64Ops
-    val unknown: HexString = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK".fromBase64
-    def encrypt(known: HexString): HexString = AES.encryptECB(key, Padding.pks7Pad(known + unknown, 16))
+    def encrypt(known: HexString): HexString = {
+      import utils.Base64.Base64Ops
+      val unknown: HexString = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK".fromBase64
+      AES.encryptECB(key, Padding.pks7Pad(known + unknown, 16))
+    }
 
     // 1.
     // compute a stream of the encryption block, each time encrypting one more
@@ -111,48 +113,58 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
     // 2. As we introduce duplication into the encryption we should see duplicate blocks because, ECB
     AES.probablyECB(blockSize)(encrypt("A".toHex * 50)) shouldBe true
     // just to sanity check ECB vs CBC
-    AES.probablyECB(blockSize)(AES.encryptECB(key, "A".toHex * 32)) shouldBe true
-    AES.probablyECB(blockSize)(AES.encryptCBC(key, "A".toHex * 32, key)) shouldBe false
+    AES.probablyECB(blockSize)(AES.encryptECB("?".toHex * blockSize, "A".toHex * 32)) shouldBe true
+    AES.probablyECB(blockSize)(AES.encryptCBC("?".toHex * blockSize, "A".toHex * 32, "*".toHex * blockSize)) shouldBe false
 
 
     // 3.
-    val blockMinus1Encrypted = encrypt(("A" * (blockSize - 1)).toHex)
-    val firstCryptoByte = blockMinus1Encrypted.take(blockSize * 2).reverse.take(2).reverse
+    // our first task is to crack the first letter of the secret. We do that
+    // by padding the block with As leaving only the last character untouched.
+    // Then we build a table of every possible character in that last spot,
+    // and compare, which character in that spot produces the entire block that
+    // the secret (with the As prepended) encrypted to
+    val blockMinus1Encrypted = encrypt(("A" * (blockSize - 1)).toHex).take(2 * blockSize)
 
-    // build an encryption dictionary for the first character
-    val dictionary = (for (c <- 0 to 255) yield {
-     c.toChar.toHex -> encrypt(("A" * (blockSize - 1) + c.toChar).toHex).take(2 * blockSize).reverse.take(2).reverse
-    }).toMap
+    (for (c <- (0 to 255).par) yield {
+      c.toChar.toHex -> encrypt(("A" * (blockSize - 1)).toHex + c.toChar.toHex).take(2 * blockSize)
+    }).find(_._2 == blockMinus1Encrypted).map(_._1) shouldBe Some("R".toHex)
 
     // 4.
+    // Now let's find the entire secret. We can go block by block as follows. Imagine that
+    // the block size is 4, and the secret is "secret".  Then we examine a procession of:
+    //    AAA?
+    //    AAs?
+    //    Ase?
+    //    sec?
+    //    AAAs ecr?
+    //    AAse cre?
+    //    Asec ret
 
-    // how many blocks does the secret cover?
     val numBlocks = encrypt("").size / (2 * blockSize)
 
-    // gradually decrypt the secret into here (as a hex string)
-    val secret = new StringBuilder
+    (0 until numBlocks * blockSize).foldLeft("") {
+      case (secret, i) =>
+        val curBlock = i / blockSize
+        val curIndex = i - curBlock * blockSize
 
-    // loop over each block, and each position within each block
-    for { curBlock <- 0 until numBlocks; curIndex <- 0 until blockSize } {
-      // for this index into the current block, generate these number of "A"s
-      val As = ("A" * (blockSize - (curIndex + 1))).toHex
+        // for this index into the current block, generate these number of "A"s
+        val As = ("A" * (blockSize - (curIndex + 1))).toHex
 
-      // from a hex string, extract the current block under consideration
-      def thisBlock(str: String) = str.drop(2 * curBlock * blockSize).take(2 * blockSize)
+        // from a hex string, extract the current block under consideration
+        def thisBlock(str: String) = str.drop(2 * curBlock * blockSize).take(2 * blockSize)
 
-      // figure out, for every character, what it encrypts to at this position within this block
-      import scala.collection.JavaConverters._
-      val blocks = new ConcurrentHashMap[Int, String]().asScala
-      for (char <- (0 until 256).par) {
-        blocks(char) = thisBlock(encrypt(As + secret.toString + char.toChar.toHex))
-      }
+        // figure out, for every character, what it encrypts to at this position within this block
+        import scala.collection.JavaConverters._
+        val blocks = new ConcurrentHashMap[Int, String]().asScala
+        for (char <- (0 until 256).par) {
+          blocks(char) = thisBlock(encrypt(As + secret + char.toChar.toHex))
+        }
 
-      // encrypt with the right number of padded As, and then find the character that had to be
-      // there in order to encrypt this block to that value. Then append that to the secret
-      val toMatch = thisBlock(encrypt(As))
-      val byte = blocks.find(_._2 == toMatch).map(_._1)
-      byte.foreach(b => secret.append(b.toChar.toHex))
-    }
-    secret.toString().fromHex should startWith("Rollin' in my 5.0")
+        // encrypt with the right number of padded As, and then find the character that had to be
+        // there in order to encrypt this block to that value. Then append that to the secret
+        val toMatch = thisBlock(encrypt(As))
+        val byte = blocks.find(_._2 == toMatch).map(_._1)
+        secret + byte.map(_.toChar.toHex).getOrElse("") // if we can't find it, it's probably a padding byte; ignore
+    }.fromHex should startWith("Rollin' in my 5.0")
   }
 }
