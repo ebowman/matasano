@@ -58,7 +58,7 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
 
   "set 1 challenge 8" should "be solved" in {
     val cryptoLines = io.Source.fromInputStream(getClass.getResourceAsStream("/8.txt")).getLines()
-    cryptoLines.exists(AES.hasDuplicateBlocks(16))
+    cryptoLines.exists(AES.probablyECB(16))
   }
 
   "set 2 challenge 10" should "be solved" in {
@@ -79,7 +79,7 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
     val count = 500
     (1 to count).par.foreach { _ =>
       val encrypted = AES.encryptionOracle(hexText)
-      if (AES.hasDuplicateBlocks(16)(encrypted)) ecbCounts.incrementAndGet()
+      if (AES.probablyECB(16)(encrypted)) ecbCounts.incrementAndGet()
       else cbcCounts.incrementAndGet()
     }
     // this will occasionally fail... :-/
@@ -109,10 +109,10 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
     blockSize shouldBe 16
 
     // 2. As we introduce duplication into the encryption we should see duplicate blocks because, ECB
-    AES.hasDuplicateBlocks(blockSize)(encrypt("A".toHex * 50)) shouldBe true
+    AES.probablyECB(blockSize)(encrypt("A".toHex * 50)) shouldBe true
     // just to sanity check ECB vs CBC
-    AES.hasDuplicateBlocks(blockSize)(AES.encryptECB(key, "A".toHex * 32)) shouldBe true
-    AES.hasDuplicateBlocks(blockSize)(AES.encryptCBC(key, "A".toHex * 32, key)) shouldBe false
+    AES.probablyECB(blockSize)(AES.encryptECB(key, "A".toHex * 32)) shouldBe true
+    AES.probablyECB(blockSize)(AES.encryptCBC(key, "A".toHex * 32, key)) shouldBe false
 
 
     // 3.
@@ -146,7 +146,6 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
       for (char <- (0 until 256).par) {
         blocks(char) = thisBlock(encrypt(As + secret.toString + char.toChar.toHex))
       }
-      println(blocks)
 
       // encrypt with the right number of padded As, and then find the character that had to be
       // there in order to encrypt this block to that value. Then append that to the secret

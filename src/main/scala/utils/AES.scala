@@ -54,12 +54,11 @@ object AES {
     }
   }
 
-  def hasDuplicateBlocks(blockSize: Int)(data: HexString): Boolean = {
-    data.toBytes.grouped(blockSize).map {
-      group =>
-        val crc = new CRC32
-        crc.update(group)
-        crc.getValue
+  def probablyECB(blockSize: Int)(data: HexString): Boolean = {
+    data.toBytes.grouped(blockSize).map { group =>
+      val crc = new CRC32
+      crc.update(group)
+      crc.getValue
     }.foldLeft((false, Set[Long]())) {
       case (a@(true, _), _) => a
       case ((false, set), crc) if set.contains(crc) => (true, set)
