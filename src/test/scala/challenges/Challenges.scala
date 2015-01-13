@@ -1,6 +1,5 @@
 package challenges
 
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
@@ -86,14 +85,7 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
   }
 
   "set 2 challenge 12" should "be solved" in {
-    val key = {
-      def randomKey(size: Int = 16) = {
-        val key = new Array[Byte](size)
-        util.Random.nextBytes(key)
-        key.toHexString
-      }
-      randomKey()
-    }
+    val key = AES.randomKey()
     def encrypt(known: HexString): HexString = {
       import utils.Base64.Base64Ops
       val unknown: HexString = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK".fromBase64
@@ -129,42 +121,51 @@ class Challenges extends FlatSpec with Matchers with GeneratorDrivenPropertyChec
       c.toChar.toHex -> encrypt(("A" * (blockSize - 1)).toHex + c.toChar.toHex).take(2 * blockSize)
     }).find(_._2 == blockMinus1Encrypted).map(_._1) shouldBe Some("R".toHex)
 
-    // 4.
-    // Now let's find the entire secret. We can go block by block as follows. Imagine that
-    // the block size is 4, and the secret is "secret".  Then we examine a procession of:
-    //    AAA?
-    //    AAs?
-    //    Ase?
-    //    sec?
-    //    AAAs ecr?
-    //    AAse cre?
-    //    Asec ret
+    // 4. (moved from here to a reusable function for use later?)
+    AES.ecbSuffixCracker(encrypt) should startWith("Rollin' in my 5.0")
+  }
 
-    val numBlocks = encrypt("").size / (2 * blockSize)
+  "set 2 challenge 13" should "be solved" in {
+    import utils.Web.parseQuery
+    parseQuery("") shouldBe Map.empty
+    parseQuery("a=b") shouldBe Map("a" -> "b")
+    parseQuery("a=b&c=d&e=f") shouldBe Map("a" -> "b", "c" -> "d", "e" -> "f")
+    parseQuery("a=b&c=d&e=f&g") shouldBe Map("a" -> "b", "c" -> "d", "e" -> "f")
 
-    (0 until numBlocks * blockSize).foldLeft("") {
-      case (secret, i) =>
-        val curBlock = i / blockSize
-        val curIndex = i - curBlock * blockSize
+    import utils.Web.profileFor
+    profileFor("foo@bar.com") shouldBe "email=foo@bar.com&uid=10&role=user"
+    profileFor("foo@bar.com&role=admin") shouldBe "email=foo@bar.com%26role%3Dadmin&uid=10&role=user"
 
-        // for this index into the current block, generate these number of "A"s
-        val As = ("A" * (blockSize - (curIndex + 1))).toHex
+    val key = AES.randomKey()
+    def encryptProfile(email: String) = AES.encryptECB(key, Padding.pks7Pad(Web.profileFor(email).toHex, 16))
+    def parseEncrypted(crypto: HexString) = parseQuery(AES.decryptECB(key, crypto).fromHex)
 
-        // from a hex string, extract the current block under consideration
-        def thisBlock(str: String) = str.drop(2 * curBlock * blockSize).take(2 * blockSize)
+    val blockSize = {
+      lazy val stream = Stream.from(0).map(i => encryptProfile(("A" * i).toHex).size)
+      stream.zip(stream.tail).map(ab => (ab._2 - ab._1) / 2).dropWhile(_ == 0).head
+    }
 
-        // figure out, for every character, what it encrypts to at this position within this block
-        import scala.collection.JavaConverters._
-        val blocks = new ConcurrentHashMap[Int, String]().asScala
-        for (char <- (0 until 256).par) {
-          blocks(char) = thisBlock(encrypt(As + secret + char.toChar.toHex))
-        }
+    blockSize shouldBe 16
 
-        // encrypt with the right number of padded As, and then find the character that had to be
-        // there in order to encrypt this block to that value. Then append that to the secret
-        val toMatch = thisBlock(encrypt(As))
-        val byte = blocks.find(_._2 == toMatch).map(_._1)
-        secret + byte.map(_.toChar.toHex).getOrElse("") // if we can't find it, it's probably a padding byte; ignore
-    }.fromHex should startWith("Rollin' in my 5.0")
+    val blockHexChars = blockSize * 2
+
+    // 0123456789abcdef 0123456789abcdef 0123456789abcdef
+    // email=.......... admin&uid=10&rol e=user
+    val adminInject = encryptProfile("..........admin")
+
+    // 0123456789abcdef 0123456789abcdef 0123456789abcdef
+    // email=a@foobard. com&uid=10&role= user
+    val foobard = encryptProfile("a@foobard.com")
+
+    // notice we can now create, by swapping blocks:
+    // 0123456789abcdef 0123456789abcdef 0123456789abcdef
+    // email=a@foobard. com&uid=10&role= admin&uid=10&rol
+
+    val injected = foobard.take(2 * blockHexChars) + adminInject.drop(blockHexChars).take(blockHexChars)
+    parseEncrypted(injected) shouldBe Map(
+      "email" -> "a@foobard.com",
+      "uid" -> "10",
+      "role" -> "admin"
+    )
   }
 }
